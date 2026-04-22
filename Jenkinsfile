@@ -66,7 +66,7 @@ pipeline {
         bat """
           docker stop springboot-app || exit 0
           docker rm springboot-app || exit 0
-          docker run -d -p 9090:9090 --name springboot-app %DOCKER_IMAGE%:latest
+          docker run -d -p 8085:8085 --name springboot-app %DOCKER_IMAGE%:latest
         """
       }
     }
