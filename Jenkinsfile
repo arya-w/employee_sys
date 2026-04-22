@@ -15,7 +15,7 @@ pipeline {
       steps {
         git branch: 'main',
             url: 'https://github.com/arya-w/employee_sys.git',
-            credentialsId: 'github-credentials'
+            credentialsId: 'git'
       }
     }
 
@@ -24,7 +24,7 @@ pipeline {
         bat '''
           echo Building with Maven...
           mvn --version
-          mvn clean compile
+          mvn clean package
           mvn test
         '''
       }
@@ -45,7 +45,7 @@ pipeline {
     stage('Docker Push') {
       steps {
         withCredentials([usernamePassword(
-            credentialsId: 'dockerhub-credentials',
+            credentialsId: 'docker',
             usernameVariable: 'DOCKER_USERNAME',
             passwordVariable: 'DOCKER_PASSWORD'
         )]) {
@@ -66,7 +66,7 @@ pipeline {
         bat """
           docker stop springboot-app || exit 0
           docker rm springboot-app || exit 0
-          docker run -d -p 8085:8085 --name springboot-app %DOCKER_IMAGE%:latest
+          docker run -d -p 9090:8085 --name springboot-app %DOCKER_IMAGE%:latest
         """
       }
     }
