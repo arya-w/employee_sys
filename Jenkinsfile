@@ -89,9 +89,15 @@ pipeline {
     stage('Deploy') {
       steps {
         bat '''
-          docker stop springboot-app || exit 0
-          docker rm springboot-app || exit 0
-          docker run -d -p 8085:8085 --name springboot-app %DOCKER_IMAGE%:latest
+          echo Cleaning up old container...
+            docker stop springboot-app 2>nul || exit 0
+            docker rm springboot-app 2>nul || exit 0
+            
+            echo Starting container...
+            docker run -d -p 8085:8085 --name springboot-app %DOCKER_IMAGE%:latest
+            
+            echo Container started successfully!
+            exit 0
         '''
       }
     }
