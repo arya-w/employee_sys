@@ -2,15 +2,16 @@ pipeline {
   agent any
   
   tools {
-    maven 'Maven'  
+    maven 'Maven'
   }
-  
+
   environment {
     DOCKER_IMAGE = 'aryaw7/employee-sys'
     DOCKER_TAG = "${BUILD_NUMBER}"
   }
 
   stages {
+
     stage('Checkout') {
       steps {
         git branch: 'main',
@@ -35,6 +36,24 @@ pipeline {
       }
     }
 
+    /* ---------------- DEBUG STAGE ---------------- */
+    stage('Debug Docker Credentials') {
+      steps {
+        withCredentials([usernamePassword(
+            credentialsId: 'dkr',
+            usernameVariable: 'U',
+            passwordVariable: 'P'
+        )]) {
+          bat '''
+            echo Checking Docker credentials...
+            echo Username = %U%
+            echo Password length check:
+            echo %P% | findstr /R "."
+          '''
+        }
+      }
+    }
+
     stage('Docker Build') {
       steps {
         bat "docker build -t %DOCKER_IMAGE%:%DOCKER_TAG% ."
@@ -49,35 +68,41 @@ pipeline {
             usernameVariable: 'DOCKER_USERNAME',
             passwordVariable: 'DOCKER_PASSWORD'
         )]) {
+
           bat '''
-                        echo %DOCKER_PASSWORD% | docker login -u %DOCKER_USERNAME% --password-stdin
-                        if %errorlevel% neq 0 exit /b %errorlevel%
-                        echo Successfully logged in to Docker Hub
-                        docker push %DOCKER_IMAGE%:%DOCKER_TAG%
-                        docker push %DOCKER_IMAGE%:latest
-                        docker logout
-                    '''
+            echo Logging into Docker Hub...
+
+            echo %DOCKER_PASSWORD%>pass.txt
+            docker login -u %DOCKER_USERNAME% --password-stdin < pass.txt
+            if %errorlevel% neq 0 exit /b %errorlevel%
+            del pass.txt
+
+            echo Login successful
+            docker push %DOCKER_IMAGE%:%DOCKER_TAG%
+            docker push %DOCKER_IMAGE%:latest
+            docker logout
+          '''
         }
       }
     }
 
     stage('Deploy') {
       steps {
-        bat """
+        bat '''
           docker stop springboot-app || exit 0
           docker rm springboot-app || exit 0
           docker run -d -p 8085:8085 --name springboot-app %DOCKER_IMAGE%:latest
-        """
+        '''
       }
     }
   }
 
   post {
-    success { 
-      echo 'Pipeline completed successfully!' 
+    success {
+      echo 'Pipeline completed successfully!'
     }
-    failure { 
-      echo 'Pipeline failed! Check the logs above.'
+    failure {
+      echo 'Pipeline failed! Check logs above.'
     }
   }
 }
