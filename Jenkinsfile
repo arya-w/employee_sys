@@ -80,7 +80,7 @@ pipeline {
             echo Login successful
             docker push %DOCKER_IMAGE%:%DOCKER_TAG%
             docker push %DOCKER_IMAGE%:latest
-            docker logout
+           
           '''
         }
       }
