@@ -23,7 +23,8 @@ FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 
 # Copy the JAR from the build stage
-COPY --from=build /app/target/Employee_sys-*.jar app.jar
+#COPY --from=build /app/target/Employee_sys-*.jar app.jar
+COPY --from=build /app/target/*.jar app.jar
 
 # Expose port 9090
 EXPOSE 8085
